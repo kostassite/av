@@ -70,6 +70,11 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
     _session                = [[AVCaptureSession alloc] init];
     
     _preview                = [[DIYAVPreview alloc] initWithSession:_session];
+	
+	if ([[self.options valueForKey:DIYAVSettingOrientationForce] boolValue]) {
+		[_preview setForceOrientation:YES withDefaultOrientation:UIDeviceOrientationLandscapeLeft];
+	}
+	
     _videoInput             = nil;
     _audioInput             = nil;
     _stillImageOutput       = [[AVCaptureStillImageOutput alloc] init];

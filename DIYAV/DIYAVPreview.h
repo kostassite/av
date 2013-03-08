@@ -15,4 +15,8 @@
 
 - (void)reset;
 
+- (void)setForceOrientation:(BOOL)forceOrientation withDefaultOrientation:(AVCaptureVideoOrientation)defaultOrientation;
+
+
 @end
+
