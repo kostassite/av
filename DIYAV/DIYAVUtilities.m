@@ -66,20 +66,15 @@
 
 #pragma mark - Device setup
 
-+ (void)setFlash:(BOOL)flash forCameraInPosition:(AVCaptureDevicePosition)position
++ (void)setFlash:(AVCaptureFlashMode)flashMode forCameraInPosition:(AVCaptureDevicePosition)position
 {
     // Flash
     if ([[self cameraInPosition:position] hasFlash]) {
         if ([[self cameraInPosition:position] lockForConfiguration:nil]) {
-            if (flash) {
-                if ([[self cameraInPosition:position] isFlashModeSupported:AVCaptureFlashModeAuto]) {
-                    [[self cameraInPosition:position] setFlashMode:AVCaptureFlashModeAuto];
-                }
-            } else {
-                if ([[self cameraInPosition:position] isFlashModeSupported:AVCaptureFlashModeOff]) {
-                    [[self cameraInPosition:position] setFlashMode:AVCaptureFlashModeOff];
-                }
+            if ([[self cameraInPosition:position] isFlashModeSupported:flashMode]) {
+                [[self cameraInPosition:position] setFlashMode:flashMode];
             }
+  
             [[self cameraInPosition:position] unlockForConfiguration];
         }
     }
@@ -87,16 +82,10 @@
     // Torch
     if ([[self cameraInPosition:position] hasTorch]) {
         if ([[self cameraInPosition:position] lockForConfiguration:nil]) {
-            if (flash)
-            {
-                if ([[self cameraInPosition:position] isTorchModeSupported:AVCaptureTorchModeAuto]) {
-                    [[self cameraInPosition:position] setTorchMode:AVCaptureTorchModeAuto];
-                }
-            } else {
-                if ([[self cameraInPosition:position] isTorchModeSupported:AVCaptureTorchModeOff]) {
-                    [[self cameraInPosition:position] setTorchMode:AVCaptureTorchModeOff];
-                }
+            if ([[self cameraInPosition:position] isTorchModeSupported:flashMode]) {
+                [[self cameraInPosition:position] setTorchMode:flashMode];
             }
+
             [[self cameraInPosition:position] unlockForConfiguration];
         }
     }

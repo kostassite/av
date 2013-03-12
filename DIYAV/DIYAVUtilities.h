@@ -18,7 +18,7 @@
 + (BOOL)isVideoCameraAvailable;
 + (AVCaptureConnection *)connectionWithMediaType:(NSString *)mediaType fromConnections:(NSArray *)connections;
 
-+ (void)setFlash:(BOOL)flash forCameraInPosition:(AVCaptureDevicePosition)position;
++ (void)setFlash:(AVCaptureFlashMode)flash forCameraInPosition:(AVCaptureDevicePosition)position;
 + (void)setHighISO:(BOOL)highISO forCameraInPosition:(AVCaptureDevicePosition)position;
 
 + (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates withFrame:(CGRect)frame withPreview:(DIYAVPreview *)preview withPorts:(NSArray *)ports;
