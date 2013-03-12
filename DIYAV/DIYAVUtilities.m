@@ -79,11 +79,12 @@
         }
     }
     
+    AVCaptureTorchMode torchMode = flashMode;
     // Torch
     if ([[self cameraInPosition:position] hasTorch]) {
         if ([[self cameraInPosition:position] lockForConfiguration:nil]) {
-            if ([[self cameraInPosition:position] isTorchModeSupported:flashMode]) {
-                [[self cameraInPosition:position] setTorchMode:flashMode];
+            if ([[self cameraInPosition:position] isTorchModeSupported:torchMode]) {
+                [[self cameraInPosition:position] setTorchMode:torchMode];
             }
 
             [[self cameraInPosition:position] unlockForConfiguration];
