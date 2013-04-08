@@ -72,7 +72,7 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
     _preview                = [[DIYAVPreview alloc] initWithSession:_session];
 	
 	if ([[self.options valueForKey:DIYAVSettingOrientationForce] boolValue]) {
-		[_preview setForceOrientation:YES withDefaultOrientation:UIDeviceOrientationLandscapeLeft];
+		[_preview setForceOrientation:YES withDefaultOrientation:[[self.options valueForKey:DIYAVSettingOrientationDefault] integerValue]];
 	}
 	
     _videoInput             = nil;
