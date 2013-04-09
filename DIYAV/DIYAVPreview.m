@@ -135,7 +135,7 @@
         return (x > y) ? CGSizeMake(x, y) : CGSizeMake(y, x);
     }
     
-    return (x <= y) ? CGSizeMake(x, y) : CGSizeMake(y, x);
+    return CGSizeMake(x,y);
 }
 
 #pragma mark - Dealloc
