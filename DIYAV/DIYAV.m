@@ -42,13 +42,19 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
 
 @implementation DIYAV
 
+@synthesize delegate        = _delegate;
+@synthesize captureMode     = _captureMode;
+@synthesize isRecording     = _isRecording;
+@synthesize flash           = _flash;
+@synthesize cameraPosition  = _cameraPosition;
+
 #pragma mark - Init
 
 - (void)_init
 {
     // Options
     NSDictionary *defaultOptions;
-    defaultOptions          = @{ DIYAVSettingFlash              : @false,
+    defaultOptions          = @{ DIYAVSettingFlash              : [NSNumber numberWithInt:AVCaptureFlashModeOff],
                                  DIYAVSettingOrientationForce   : @false,
                                  DIYAVSettingOrientationDefault : [NSNumber numberWithInt:AVCaptureVideoOrientationLandscapeRight],
                                  DIYAVSettingCameraPosition     : [NSNumber numberWithInt:AVCaptureDevicePositionBack],
@@ -64,6 +70,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
     _options                = Underscore.dict(_options)
                               .defaults(defaultOptions)
                               .unwrap;
+                              
+    _flash                  = [[_options valueForKey:DIYAVSettingFlash] integerValue];
+    _cameraPosition         = [[_options valueForKey:DIYAVSettingCameraPosition] integerValue];
     
     // AV setup
     _captureMode            = DIYAVModePhoto;
@@ -212,6 +221,23 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
 }
 
 #pragma mark - Override
+
+- (void)setFlash:(int)flash
+{
+    self->_flash = flash;
+    if (_captureMode == DIYAVModePhoto) {
+        [DIYAVUtilities setFlash:_flash forCameraInPosition:_cameraPosition];
+    }
+    else if (_captureMode == DIYAVModeVideo) {
+        [DIYAVUtilities setTorch:_flash forCameraInPosition:_cameraPosition];
+    }
+}
+
+- (void)setCameraPosition:(int)cameraPosition
+{
+    self->_cameraPosition = cameraPosition;
+    [self setCaptureMode:_captureMode];
+}
 
 - (void)setCaptureMode:(DIYAVMode)captureMode
 {
