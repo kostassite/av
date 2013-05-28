@@ -37,16 +37,17 @@ NSString *const DIYAVSettingSaveLibrary;
 @protocol DIYAVDelegate <NSObject>
 @required
 - (void)AVAttachPreviewLayer:(CALayer *)layer;
+- (void)AVcaptureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL shouldSaveToLibrary:(BOOL)shouldSaveToLibrary fromConnections:(NSArray *)connections error:(NSError *)error;
+- (void)AVCaptureOutputStill:(CMSampleBufferRef)imageDataSampleBuffer shouldSaveToLibrary:(BOOL)shouldSaveToLibrary withError:(NSError *)error;
+
+@optional
+- (void)AVCaptureStarted:(DIYAV *)av;
+- (void)AVCaptureStopped:(DIYAV *)av;
 
 - (void)AVDidFail:(DIYAV *)av withError:(NSError *)error;
 
 - (void)AVModeWillChange:(DIYAV *)av mode:(DIYAVMode)mode;
 - (void)AVModeDidChange:(DIYAV *)av mode:(DIYAVMode)mode;
-
-- (void)AVCaptureStarted:(DIYAV *)av;
-- (void)AVCaptureStopped:(DIYAV *)av;
-- (void)AVcaptureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL shouldSaveToLibrary:(BOOL)shouldSaveToLibrary fromConnections:(NSArray *)connections error:(NSError *)error;
-- (void)AVCaptureOutputStill:(CMSampleBufferRef)imageDataSampleBuffer shouldSaveToLibrary:(BOOL)shouldSaveToLibrary withError:(NSError *)error;
 @end
 
 //
@@ -56,6 +57,8 @@ NSString *const DIYAVSettingSaveLibrary;
 @property (weak)        id<DIYAVDelegate>   delegate;
 @property (nonatomic)   DIYAVMode           captureMode;
 @property               BOOL                isRecording;
+@property (nonatomic)   int                 flash;
+@property (nonatomic)   int                 cameraPosition;
 
 - (id)initWithOptions:(NSDictionary *)options;
 

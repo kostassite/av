@@ -42,13 +42,19 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
 
 @implementation DIYAV
 
+@synthesize delegate        = _delegate;
+@synthesize captureMode     = _captureMode;
+@synthesize isRecording     = _isRecording;
+@synthesize flash           = _flash;
+@synthesize cameraPosition  = _cameraPosition;
+
 #pragma mark - Init
 
 - (void)_init
 {
     // Options
     NSDictionary *defaultOptions;
-    defaultOptions          = @{ DIYAVSettingFlash              : @false,
+    defaultOptions          = @{ DIYAVSettingFlash              : [NSNumber numberWithInt:AVCaptureFlashModeOff],
                                  DIYAVSettingOrientationForce   : @false,
                                  DIYAVSettingOrientationDefault : [NSNumber numberWithInt:AVCaptureVideoOrientationLandscapeRight],
                                  DIYAVSettingCameraPosition     : [NSNumber numberWithInt:AVCaptureDevicePositionBack],
@@ -64,6 +70,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
     _options                = Underscore.dict(_options)
                               .defaults(defaultOptions)
                               .unwrap;
+                              
+    _flash                  = [[_options valueForKey:DIYAVSettingFlash] integerValue];
+    _cameraPosition         = [[_options valueForKey:DIYAVSettingCameraPosition] integerValue];
     
     // AV setup
     _captureMode            = DIYAVModePhoto;
@@ -134,7 +143,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
             [self.videoInput.device unlockForConfiguration];
         }
         else {
-            [self.delegate AVDidFail:self withError:error];
+            if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                [self.delegate AVDidFail:self withError:error];
+            }
         }
     }
 }
@@ -156,7 +167,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
             [self.delegate AVCaptureOutputStill:imageDataSampleBuffer shouldSaveToLibrary:[[self.options valueForKey:DIYAVSettingSaveLibrary] boolValue] withError:error];
         }];
     } else {
-        [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:500 userInfo:nil]];
+        if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+            [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:500 userInfo:nil]];
+        }
     }
 }
 
@@ -164,7 +177,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
 {
     if (self.session != nil) {
         [self setIsRecording:true];
-        [self.delegate AVCaptureStarted:self];
+        if ([self.delegate respondsToSelector:@selector(AVCaptureStarted:)]) {
+            [self.delegate AVCaptureStarted:self];
+        }
         
         // Create URL to record to
         NSString *assetPath         = [DIYAVUtilities createAssetFilePath:@"mov"];
@@ -173,7 +188,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
         if ([fileManager fileExistsAtPath:assetPath]) {
             NSError *error;
             if ([fileManager removeItemAtPath:assetPath error:&error] == NO) {
-                [self.delegate AVDidFail:self withError:error];
+                if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                    [self.delegate AVDidFail:self withError:error];
+                }
             }
         }
         
@@ -195,7 +212,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
     if (self.session != nil && self.isRecording)
     {
         [self setIsRecording:false];
-        [self.delegate AVCaptureStopped:self];
+        if ([self.delegate respondsToSelector:@selector(AVCaptureStopped:)]) {
+            [self.delegate AVCaptureStopped:self];
+        }
         
         [self.movieFileOutput stopRecording];
     }
@@ -203,14 +222,32 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
 
 #pragma mark - Override
 
+- (void)setFlash:(int)flash
+{
+    self->_flash = flash;
+    if (_captureMode == DIYAVModePhoto) {
+        [DIYAVUtilities setFlash:_flash forCameraInPosition:_cameraPosition];
+    }
+    else if (_captureMode == DIYAVModeVideo) {
+        [DIYAVUtilities setTorch:_flash forCameraInPosition:_cameraPosition];
+    }
+}
+
+- (void)setCameraPosition:(int)cameraPosition
+{
+    self->_cameraPosition = cameraPosition;
+    [self setCaptureMode:_captureMode];
+}
+
 - (void)setCaptureMode:(DIYAVMode)captureMode
 {
     // Super
     self->_captureMode = captureMode;
     
     //
-    
-    [self.delegate AVModeWillChange:self mode:captureMode];
+    if ([self.delegate respondsToSelector:@selector(AVModeWillChange:mode:)]) {
+        [self.delegate AVModeWillChange:self mode:captureMode];
+    }
     
     switch (captureMode) {
             // Photo mode
@@ -219,7 +256,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
             if ([DIYAVUtilities isPhotoCameraAvailable]) {
                 [self establishPhotoMode];
             } else {
-                [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.cam" code:100 userInfo:nil]];
+                if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                    [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.cam" code:100 userInfo:nil]];
+                }
             }
             break;
             
@@ -229,12 +268,15 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
             if ([DIYAVUtilities isVideoCameraAvailable]) {
                 [self establishVideoMode];
             } else {
-                [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.cam" code:101 userInfo:nil]];
+                if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                    [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.cam" code:101 userInfo:nil]];
+                }
             }
             break;
     }
-    
-    [self.delegate AVModeDidChange:self mode:captureMode];
+    if ([self.delegate respondsToSelector:@selector(AVModeDidChange:mode:)]) {
+        [self.delegate AVModeDidChange:self mode:captureMode];
+    }
 }
 
 #pragma mark - Private methods
@@ -273,13 +315,19 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
             if ([self.session canAddInput:self.videoInput]) {
                 [self.session addInput:self.videoInput];
             } else {
-                [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:201 userInfo:nil]];
+                if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                    [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:201 userInfo:nil]];
+                }
             }
         } else {
-            [[self delegate] AVDidFail:self withError:error];
+            if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                [[self delegate] AVDidFail:self withError:error];
+            }
         }
     } else {
-        [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:200 userInfo:nil]];
+    	if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+            [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:200 userInfo:nil]];
+    	}
     }
     
     // Outputs
@@ -325,13 +373,19 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
             if ([self.session canAddInput:self.videoInput]) {
                 [self.session addInput:self.videoInput];
             } else {
-                [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:201 userInfo:nil]];
+                if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                    [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:201 userInfo:nil]];
+                }
             }
         } else {
-            [[self delegate] AVDidFail:self withError:error];
+            if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                [[self delegate] AVDidFail:self withError:error];
+            }
         }
     } else {
-        [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:200 userInfo:nil]];
+        if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+            [self.delegate AVDidFail:self withError:[NSError errorWithDomain:@"com.diy.av" code:200 userInfo:nil]];
+        }
     }
     
     AVCaptureDevice *audioDevice    = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
@@ -343,7 +397,9 @@ NSString *const DIYAVSettingSaveLibrary            = @"DIYAVSettingSaveLibrary";
         {
             [self.session addInput:self.audioInput];
         } else {
-            [self.delegate AVDidFail:self withError:error];
+            if ([self.delegate respondsToSelector:@selector(AVDidFail:withError:)]) {
+                [self.delegate AVDidFail:self withError:error];
+            }
         }
     }
     
